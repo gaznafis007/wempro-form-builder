@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useFormBuilder } from '../../context/FormBuilderContext';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
 import { Trash, Plus } from 'lucide-react';
 
 export default function PropertiesPanel() {
-  const { state, getSelectedField, updateField, updateFieldset, addOption, updateOption, removeOption, removeField } = useFormBuilder();
+  const { state, getSelectedField, updateField, updateFieldset, addOption, updateOption, removeOption, removeField, selectField } = useFormBuilder();
   const [fieldName, setFieldName] = useState('');
   const [fieldsetName, setFieldsetName] = useState('');
   const { field, fieldset } = getSelectedField();
@@ -47,8 +47,17 @@ export default function PropertiesPanel() {
     if (field && fieldset) {
       updateField(fieldset.id, field.id, { name: fieldName, label: fieldName });
       updateFieldset(fieldset.id, { name: fieldsetName });
+      // Close the panel by setting selection to null
+      setTimeout(() => {
+        updateField(fieldset.id, field.id, {}); // Trigger a refresh
+        selectField(null);
+      }, 100);
     } else if (fieldset) {
       updateFieldset(fieldset.id, { name: fieldsetName });
+      // Close the panel by setting selection to null
+      setTimeout(() => {
+        selectField(null);
+      }, 100);
     }
   };
 
