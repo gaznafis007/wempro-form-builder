@@ -20,8 +20,39 @@ export default function Fieldset({ fieldset }: FieldsetProps) {
       // Add a new field from the palette
       addField(fieldset.id, data.fieldType as FieldType);
     } else if (data.type === 'field-item' && data.fieldId && data.sourceFieldsetId) {
+      // Get the drop target to determine position
+      const targetElement = document.elementFromPoint(
+        window.lastDragX || 0, 
+        window.lastDragY || 0
+      ) as HTMLElement;
+      
+      // Find the closest field item if any
+      const closestField = targetElement?.closest('.field-item');
+      let targetPosition: number | undefined = undefined;
+      
+      if (closestField) {
+        // Get the target field's ID
+        const targetFieldId = closestField.getAttribute('data-field-id');
+        if (targetFieldId) {
+          // Find its position in the fields array
+          const targetIndex = fieldset.fields.findIndex(f => f.id === targetFieldId);
+          if (targetIndex !== -1) {
+            // Determine if dropping before or after based on mouse position
+            const targetRect = closestField.getBoundingClientRect();
+            const mouseY = window.lastDragY || 0;
+            const middleY = targetRect.top + (targetRect.height / 2);
+            
+            // If mouse is above the middle of the element, insert before
+            // Otherwise, insert after
+            targetPosition = mouseY < middleY ? targetIndex : targetIndex + 1;
+          }
+        }
+      }
+      
+      console.log('Moving field with position:', targetPosition);
+      
       // Move an existing field from another fieldset
-      moveField(data.sourceFieldsetId, fieldset.id, data.fieldId);
+      moveField(data.sourceFieldsetId, fieldset.id, data.fieldId, targetPosition);
     }
     
     // Reset drop indicator

@@ -2,7 +2,7 @@ import { useFormBuilder } from '../../context/FormBuilderContext';
 import { useDrag } from '../../hooks/useDrag';
 import { FormField as FormFieldType } from '../../types/formbuilder';
 import { GripVertical } from 'lucide-react';
-import { Input } from '../ui/input';
+import { Input } from '../../components/ui/input';
 import { Textarea } from '../ui/textarea';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
@@ -69,7 +69,7 @@ export default function FormField({ field, fieldsetId }: FormFieldProps) {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select an option" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" className="z-50 w-full" style={{ position: 'absolute', zIndex: 50 }}>
               {field.options?.map((option) => (
                 <SelectItem key={option.id} value={option.value}>
                   {option.label}

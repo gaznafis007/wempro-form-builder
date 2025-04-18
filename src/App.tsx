@@ -9,6 +9,10 @@ import { FormBuilderProvider } from "./context/FormBuilderContext";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+// Initialize the drag tracking variables
+window.lastDragX = 0;
+window.lastDragY = 0;
+
 function Router() {
   return (
     <Switch>

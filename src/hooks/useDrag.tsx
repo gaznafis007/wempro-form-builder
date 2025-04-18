@@ -2,6 +2,14 @@ import { useRef, useState, useEffect } from 'react';
 import { FieldType } from '../types/formbuilder';
 import { useFormBuilder } from '../context/FormBuilderContext';
 
+// Declare global variables to track drag position
+declare global {
+  interface Window {
+    lastDragX: number;
+    lastDragY: number;
+  }
+}
+
 interface UseDragProps {
   type: 'palette-item' | 'field-item' | 'fieldset';
   fieldType?: FieldType;
@@ -92,6 +100,10 @@ export const useDrop = ({ type, fieldsetId, onDrop }: UseDropProps): UseDropResu
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    
+    // Track mouse position for precise drop positioning
+    window.lastDragX = e.clientX;
+    window.lastDragY = e.clientY;
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
