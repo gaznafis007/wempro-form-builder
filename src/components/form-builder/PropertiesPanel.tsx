@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useFormBuilder } from '../../context/FormBuilderContext';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { Trash, Plus } from 'lucide-react';
 
 export default function PropertiesPanel() {
