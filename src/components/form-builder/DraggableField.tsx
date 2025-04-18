@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useDrag } from '../../hooks/useDrag';
 import { useFormBuilder } from '../../context/FormBuilderContext';
-import { FormField, FieldType } from '../../types/formbuilder';
+import { FormField } from '../../types/formbuilder';
 import { GripVertical, Copy, Trash } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -11,7 +11,7 @@ interface DraggableFieldProps {
   index: number;
 }
 
-export default function DraggableField({ field, fieldsetId, index }: DraggableFieldProps) {
+export default function DraggableField({ field, fieldsetId,  }: DraggableFieldProps) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const { selectField, duplicateField, removeField, state } = useFormBuilder();
   

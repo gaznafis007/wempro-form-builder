@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Trash, Plus } from 'lucide-react';
 
 export default function PropertiesPanel() {
-  const { state, getSelectedField, updateField, updateFieldset, addOption, updateOption, removeOption, removeField, selectField } = useFormBuilder();
+  const { getSelectedField, updateField, updateFieldset, addOption, updateOption, removeOption, removeField, selectField } = useFormBuilder();
   const [fieldName, setFieldName] = useState('');
   const [fieldsetName, setFieldsetName] = useState('');
   const { field, fieldset } = getSelectedField();
