@@ -36,8 +36,8 @@ export default function FormHeader() {
       
       <div className="flex items-center text-sm text-neutral-600">
         <span className="mr-2">{getLastSavedText()}</span>
-        <button className="p-1 rounded-full hover:bg-neutral-100">
-          <Eye size={16} />
+        <button className="p-2 rounded-md bg-blue-600/20">
+          <Eye size={16} className='text-blue-800' />
         </button>
       </div>
     </header>
