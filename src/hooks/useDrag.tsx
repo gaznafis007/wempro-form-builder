@@ -49,6 +49,7 @@ export const useDrag = ({ type, fieldType, fieldId, fieldsetId }: UseDragProps):
   };
 
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    console.log(e)
     dragNode.current = null;
     setIsDragging(false);
     setGlobalDragging(false);
