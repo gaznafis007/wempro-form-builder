@@ -12,10 +12,11 @@ export default function FormBuilder() {
     addFieldset, 
     addField, 
     moveField,
+    moveFieldset,
     saveForm 
   } = useFormBuilder();
   
-  // Handle dropping a field from the palette or moving a field
+  // Handle dropping a field from the palette or moving a field/fieldset
   const handleFormCanvasDrop = (data: Record<string, string>) => {
     console.log('FormBuilder received drop', data);
     
@@ -39,6 +40,19 @@ export default function FormBuilder() {
           fieldId: data.fieldId
         });
         moveField(data.sourceFieldsetId, data.targetFieldsetId, data.fieldId);
+      }
+    }
+    // Handle fieldset reordering
+    else if (data.type === 'fieldset' && data.fieldsetId) {
+      const targetPosition = data.targetPosition ? parseInt(data.targetPosition) : undefined;
+      
+      // Only reorder if we have a valid position
+      if (targetPosition !== undefined && !isNaN(targetPosition)) {
+        console.log('Reordering fieldset', {
+          fieldsetId: data.fieldsetId,
+          position: targetPosition
+        });
+        moveFieldset(data.fieldsetId, targetPosition);
       }
     }
   };

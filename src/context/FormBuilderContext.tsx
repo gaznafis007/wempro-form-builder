@@ -16,6 +16,7 @@ interface FormBuilderContextProps {
   selectField: (fieldId: string | null) => void;
   selectFieldset: (fieldsetId: string | null) => void;
   moveField: (sourceFieldsetId: string, targetFieldsetId: string, fieldId: string, position?: number) => void;
+  moveFieldset: (fieldsetId: string, position: number) => void;
   addOption: (fieldsetId: string, fieldId: string) => void;
   updateOption: (fieldsetId: string, fieldId: string, optionId: string, label: string) => void;
   removeOption: (fieldsetId: string, fieldId: string, optionId: string) => void;
@@ -49,6 +50,7 @@ type Action =
   | { type: 'SELECT_FIELDSET'; payload: { fieldsetId: string | null } }
   | { type: 'DUPLICATE_FIELD'; payload: { fieldsetId: string; field: FormField } }
   | { type: 'MOVE_FIELD'; payload: { sourceFieldsetId: string; targetFieldsetId: string; fieldId: string; position?: number } }
+  | { type: 'MOVE_FIELDSET'; payload: { fieldsetId: string; position: number } }
   | { type: 'ADD_OPTION'; payload: { fieldsetId: string; fieldId: string; option: FieldOption } }
   | { type: 'UPDATE_OPTION'; payload: { fieldsetId: string; fieldId: string; optionId: string; label: string } }
   | { type: 'REMOVE_OPTION'; payload: { fieldsetId: string; fieldId: string; optionId: string } }
@@ -377,6 +379,34 @@ const formBuilderReducer = (state: FormState, action: Action): FormState => {
       };
     }
     
+    case 'MOVE_FIELDSET': {
+      const { fieldsetId, position } = action.payload;
+      const fieldsetIndex = state.fieldsets.findIndex(fs => fs.id === fieldsetId);
+      
+      if (fieldsetIndex === -1 || position < 0 || position >= state.fieldsets.length) {
+        return state;
+      }
+      
+      // If the position is the same as the current index, do nothing
+      if (position === fieldsetIndex) {
+        return state;
+      }
+      
+      // Get the fieldset to move
+      const fieldset = state.fieldsets[fieldsetIndex];
+      
+      // Create a new array without the fieldset
+      const newFieldsets = state.fieldsets.filter(fs => fs.id !== fieldsetId);
+      
+      // Insert the fieldset at the new position
+      newFieldsets.splice(position, 0, fieldset);
+      
+      return {
+        ...state,
+        fieldsets: newFieldsets,
+      };
+    }
+    
     case 'SET_IS_DRAGGING':
       return {
         ...state,
@@ -655,6 +685,17 @@ export const FormBuilderProvider: React.FC<{ children: React.ReactNode }> = ({ c
       },
     });
   };
+  
+  // Move a fieldset to a new position in the canvas
+  const moveFieldset = (fieldsetId: string, position: number) => {
+    dispatch({
+      type: 'MOVE_FIELDSET',
+      payload: {
+        fieldsetId,
+        position,
+      },
+    });
+  };
 
   // Add an option to a multi-choice field
   const addOption = (fieldsetId: string, fieldId: string) => {
@@ -828,6 +869,7 @@ export const FormBuilderProvider: React.FC<{ children: React.ReactNode }> = ({ c
     selectField,
     selectFieldset,
     moveField,
+    moveFieldset,
     addOption,
     updateOption,
     removeOption,
