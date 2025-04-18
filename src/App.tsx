@@ -1,13 +1,36 @@
-import './App.css'
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "./components/ui/toaster";
+import { TooltipProvider } from "./components/ui/tooltip";
+// import NotFound from "@/pages/not-found";
+import FormBuilder from "./pages/FormBuilder";
+import { FormBuilderProvider } from "./context/FormBuilderContext";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
-function App() {
-  
-
+function Router() {
   return (
-    <>
-      <h2 className="text-4xl text-indigo-600 text-center">Hello</h2>
-    </>
-  )
+    <Switch>
+      <Route path="/" component={FormBuilder} />
+      {/* <Route component={NotFound} /> */}
+    </Switch>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <DndProvider backend={HTML5Backend}>
+          <FormBuilderProvider>
+            <Toaster />
+            <Router />
+          </FormBuilderProvider>
+        </DndProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
