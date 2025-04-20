@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState } fro
 import { FormState, FormField, Fieldset, FieldType, FieldOption } from '../types/formbuilder';
 import { generateUniqueId, generateUniqueName } from '../lib/utils/fieldUtils';
 import { useToast } from '../hooks/use-toast';
+import { apiRequest } from '../lib/queryClient';
 
 // Define the context type
 interface FormBuilderContextProps {
@@ -434,74 +435,62 @@ export const FormBuilderProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
 
+  // API endpoint
+  const API_URL = 'http://team.dev.helpabode.com:54292/api/wempro/react-dev/coding-test/gazinafisrafi.gnr@gmail.com';
+
   // Load saved form on initial mount
   useEffect(() => {
     const loadSavedForm = async () => {
       try {
-        // Try to use HTTPS if possible
-        let apiUrl = 'https://team.dev.helpabode.com:54292/api/wempro/react-dev/coding-test/gazinafisrafi.gnr@gmail.com';
-        
-        // Set a timeout to prevent the fetch from hanging indefinitely
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        try {
-          const response = await fetch(apiUrl, { 
-            signal: controller.signal 
+        const response = await apiRequest('GET', API_URL);
+        const data = await response.json();
+
+        if (data && data.your_respons) {
+          // Transform API data to internal FormState format
+          const transformedFieldsets: Fieldset[] = data.your_respons.map((fieldset: any) => ({
+            id: fieldset.fieldsetTextId,
+            name: fieldset.fieldsetName,
+            fields: fieldset.fields.map((field: any) => ({
+              id: field.labelTextId,
+              type: field.inputType === 'select' ? 'dropdown' : field.inputType,
+              name: field.labelName.toLowerCase().replace(/\s+/g, '-'),
+              label: field.labelName,
+              placeholder: field.inputType === 'text' || field.inputType === 'textarea' ? 'Enter text here' : '',
+              required: false,
+              options: Array.isArray(field.options)
+                ? field.options.map((option: string, index: number) => ({
+                    id: generateUniqueId(),
+                    label: option,
+                    value: option.toLowerCase().replace(/\s+/g, '-'),
+                  }))
+                : undefined,
+            })),
+          }));
+
+          dispatch({
+            type: 'SET_FULL_STATE',
+            payload: {
+              fieldsets: transformedFieldsets,
+              selectedFieldId: null,
+              selectedFieldsetId: null,
+              isDragging: false,
+              lastSaved: null,
+              isDraft: false,
+            },
           });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.form) {
-              dispatch({
-                type: 'SET_FULL_STATE',
-                payload: {
-                  ...data.form,
-                  lastSaved: data.form.lastSaved ? new Date(data.form.lastSaved) : null,
-                },
-              });
-              
-              // Show a success message
-              toast({
-                title: 'Form loaded',
-                description: 'Your saved form has been loaded successfully.',
-              });
-            }
-          } else {
-            // Show specific error for HTTP issues
-            toast({
-              title: 'Error loading form',
-              description: `Server returned an error: ${response.status} ${response.statusText}`,
-              variant: 'destructive',
-            });
-          }
-        } catch (error) {
-          clearTimeout(timeoutId);
-          
-          // Handle network issues, abort errors, etc.
-          const fetchError = error as Error;
-          if (fetchError.name === 'AbortError') {
-            toast({
-              title: 'Connection timeout',
-              description: 'The connection to the form API timed out. Working in offline mode.',
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Network error',
-              description: 'Could not connect to the form API. Working in offline mode.',
-              variant: 'destructive',
-            });
-          }
+
+          toast({
+            title: 'Form loaded',
+            description: 'Your saved form has been loaded successfully.',
+          });
+        } else {
+          throw new Error('Invalid response format: your_respons field missing');
         }
       } catch (error) {
         console.error('Failed to load saved form:', error);
-        
         toast({
           title: 'Error',
-          description: 'An unexpected error occurred while loading the form.',
+          description: error instanceof Error ? error.message : 'An unexpected error occurred while loading the form.',
           variant: 'destructive',
         });
       } finally {
@@ -761,82 +750,46 @@ export const FormBuilderProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Save the form
   const saveForm = async (asDraft: boolean = false) => {
     try {
-      const payload = {
-        form: {
-          ...state,
-          lastSaved: new Date(),
-          isDraft: asDraft,
-        },
-      };
+      // Transform the state into the desired API format
+      const transformedData = state.fieldsets.map(fieldset => ({
+        fieldsetName: fieldset.name,
+        fieldsetTextId: fieldset.id,
+        fields: fieldset.fields.map(field => ({
+          labelName: field.label,
+          labelTextId: field.id,
+          inputType: field.type === 'dropdown' || field.type === 'number-combo' ? 'select' : field.type,
+          options: field.options ? field.options.map(option => option.label) : '',
+        })),
+      }));
+
+      const response = await apiRequest('POST', API_URL, transformedData);
       
-      // Set up timeout control
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      try {
-        const apiUrl = 'https://team.dev.helpabode.com:54292/api/wempro/react-dev/coding-test/gazinafisrafi.gnr@gmail.com';
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+      if (response.ok) {
+        // Update local state to reflect the save
+        dispatch({
+          type: 'SET_FORM_STATE',
+          payload: {
+            lastSaved: new Date(),
+            isDraft: asDraft,
           },
-          body: JSON.stringify(payload),
-          signal: controller.signal
         });
         
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          // Update local state to reflect the save
-          dispatch({
-            type: 'SET_FORM_STATE',
-            payload: {
-              lastSaved: new Date(),
-              isDraft: asDraft,
-            },
-          });
-          
-          // Show success message
-          toast({
-            title: asDraft ? 'Draft Saved' : 'Form Saved',
-            description: asDraft 
-              ? 'Your form draft has been saved.' 
-              : 'Your form has been saved successfully.',
-          });
-        } else {
-          // Handle HTTP error responses
-          toast({
-            title: 'Error saving form',
-            description: `Server returned an error: ${response.status} ${response.statusText}`,
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        clearTimeout(timeoutId);
-        
-        // Handle network issues or timeouts
-        const fetchError = error as Error;
-        if (fetchError.name === 'AbortError') {
-          toast({
-            title: 'Connection timeout',
-            description: 'The connection to the form API timed out. Form was not saved.',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Network error',
-            description: 'Could not connect to the form API. Form was not saved.',
-            variant: 'destructive',
-          });
-        }
+        // Show success message
+        toast({
+          title: asDraft ? 'Draft Saved' : 'Form Saved',
+          description: asDraft 
+            ? 'Your form draft has been saved.' 
+            : 'Your form has been saved successfully.',
+          variant: 'default'
+        });
       }
     } catch (error) {
       console.error('Error saving form:', error);
       
-      // Catch any other unexpected errors
+      // Handle errors using toast
       toast({
         title: 'Error',
-        description: 'An unexpected error occurred while saving the form.',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred while saving the form.',
         variant: 'destructive',
       });
     }
