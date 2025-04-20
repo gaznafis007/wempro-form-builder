@@ -458,11 +458,12 @@ export const FormBuilderProvider: React.FC<{ children: React.ReactNode }> = ({ c
               placeholder: field.inputType === 'text' || field.inputType === 'textarea' ? 'Enter text here' : '',
               required: false,
               options: Array.isArray(field.options)
-                ? field.options.map((option: string, index: number) => ({
+                ? field.options.map((option: string,) => ({
                     id: generateUniqueId(),
                     label: option,
                     value: option.toLowerCase().replace(/\s+/g, '-'),
-                  }))
+                  }
+                ))
                 : undefined,
             })),
           }));
